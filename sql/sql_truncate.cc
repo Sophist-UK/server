@@ -147,14 +147,12 @@ fk_truncate_illegal_if_parent(THD *thd, TABLE *table)
   /* Loop over the set of foreign keys for which this table is a parent. */
   while ((fk_info= it++))
   {
-    if (lex_string_cmp(system_charset_info, fk_info->referenced_db,
-                       &table->s->db) ||
-        lex_string_cmp(system_charset_info, fk_info->referenced_table,
-                       &table->s->table_name) ||
-        lex_string_cmp(system_charset_info, fk_info->foreign_db,
-                       &table->s->db) ||
-        lex_string_cmp(system_charset_info, fk_info->foreign_table,
-                       &table->s->table_name))
+    // QQ: why db and table don't use table_alias_charset for comparison?
+    if (!Lex_ident_ci(*fk_info->referenced_db).streq(table->s->db) ||
+        !Lex_ident_ci(*fk_info->referenced_table).
+                                           streq(table->s->table_name) ||
+        !Lex_ident_ci(*fk_info->foreign_db).streq(table->s->db) ||
+        !Lex_ident_ci(*fk_info->foreign_table).streq(table->s->table_name))
       break;
   }
 

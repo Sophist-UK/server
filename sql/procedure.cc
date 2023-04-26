@@ -29,16 +29,17 @@
 #endif
 
 static struct st_procedure_def {
-  const char *name;
+  const Lex_ident_routine name;
   Procedure *(*init)(THD *thd,ORDER *param,select_result *result,
 		     List<Item> &field_list);
 } sql_procs[] = {
 #ifdef USE_PROC_RANGE
-  { "split_sum",proc_sum_range_init },		// Internal procedure at TCX
-  { "split_count",proc_count_range_init },	// Internal procedure at TCX
-  { "matris_ranges",proc_matris_range_init },	// Internal procedure at TCX
+  // A few internal procedures at TCX
+  { "split_sum"_Lex_ident_routine, proc_sum_range_init },
+  { "split_count"_Lex_ident_routine, proc_count_range_init },
+  { "matris_ranges"_Lex_ident_routine, proc_matris_range_init },
 #endif
-  { "analyse",proc_analyse_init }		// Analyse a result
+  { "analyse"_Lex_ident_routine, proc_analyse_init }  // Analyse a result
 };
 
 
@@ -88,8 +89,7 @@ setup_procedure(THD *thd,ORDER *param,select_result *result,
     DBUG_RETURN(0);
   for (i=0 ; i < array_elements(sql_procs) ; i++)
   {
-    if (!my_strcasecmp(system_charset_info,
-                       (*param->item)->name.str, sql_procs[i].name))
+    if (sql_procs[i].name.streq((*param->item)->name))
     {
       Procedure *proc=(*sql_procs[i].init)(thd,param,result,field_list);
       *error= !proc;

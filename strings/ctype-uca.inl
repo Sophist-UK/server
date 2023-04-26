@@ -942,7 +942,6 @@ MY_COLLATION_HANDLER MY_FUNCTION_NAME(collation_handler)=
   my_strnxfrmlen_any_uca,
   MY_LIKE_RANGE,
   my_wildcmp_uca,
-  NULL,                                /* strcasecmp() */
   my_instr_mb,
   MY_FUNCTION_NAME(hash_sort),
   my_propagate_complex,
@@ -968,7 +967,6 @@ MY_COLLATION_HANDLER MY_FUNCTION_NAME(collation_handler_nopad)=
   my_strnxfrmlen_any_uca,
   MY_LIKE_RANGE,    /* my_like_range_mb or my_like_range_generic */
   my_wildcmp_uca,
-  NULL,                                /* strcasecmp() */
   my_instr_mb,
   MY_FUNCTION_NAME(hash_sort_nopad),
   my_propagate_complex,
@@ -992,7 +990,6 @@ MY_COLLATION_HANDLER MY_FUNCTION_NAME(collation_handler_multilevel)=
   my_strnxfrmlen_any_uca_multilevel,
   MY_LIKE_RANGE,
   my_wildcmp_uca,
-  NULL,                                /* strcasecmp() */
   my_instr_mb,
   MY_FUNCTION_NAME(hash_sort),
   my_propagate_complex,
@@ -1016,7 +1013,6 @@ MY_COLLATION_HANDLER MY_FUNCTION_NAME(collation_handler_nopad_multilevel)=
   my_strnxfrmlen_any_uca_multilevel,
   MY_LIKE_RANGE,
   my_wildcmp_uca,
-  NULL,                                /* strcasecmp() */
   my_instr_mb,
   MY_FUNCTION_NAME(hash_sort),
   my_propagate_complex,

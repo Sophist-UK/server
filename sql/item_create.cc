@@ -68,9 +68,10 @@ class Create_sp_func : public Create_qfunc
 {
 public:
   virtual Item *create_with_db(THD *thd,
-                               const LEX_CSTRING *db,
-                               const LEX_CSTRING *name,
-                               bool use_explicit_name, List<Item> *item_list);
+                               const Lex_ident_db &db,
+                               const Lex_ident_routine &name,
+                               bool use_explicit_name,
+                               List<Item> *item_list) override;
 
   static Create_sp_func s_singleton;
 
@@ -2638,7 +2639,8 @@ Create_qfunc::create_func(THD *thd, const LEX_CSTRING *name,
   if (thd->lex->copy_db_to(&db))
     return NULL;
 
-  return create_with_db(thd, &db, name, false, item_list);
+  return create_with_db(thd, Lex_ident_db(db), Lex_ident_routine(*name),
+                        false, item_list);
 }
 
 
@@ -2758,8 +2760,8 @@ Create_sp_func Create_sp_func::s_singleton;
 
 Item*
 Create_sp_func::create_with_db(THD *thd,
-                               const LEX_CSTRING *db,
-                               const LEX_CSTRING *name,
+                               const Lex_ident_db &db,
+                               const Lex_ident_routine &name,
                                bool use_explicit_name, List<Item> *item_list)
 {
   int arg_count= 0;
@@ -2767,7 +2769,7 @@ Create_sp_func::create_with_db(THD *thd,
   LEX *lex= thd->lex;
   sp_name *qname;
   const Sp_handler *sph= &sp_handler_function;
-  Database_qualified_name pkgname(&null_clex_str, &null_clex_str);
+  Database_qualified_name pkgname;
 
   if (unlikely(has_named_parameters(item_list)))
   {
@@ -2780,7 +2782,7 @@ Create_sp_func::create_with_db(THD *thd,
       because it can refer to a User Defined Function call.
       For a Stored Function however, this has no semantic.
     */
-    my_error(ER_WRONG_PARAMETERS_TO_STORED_FCT, MYF(0), name->str);
+    my_error(ER_WRONG_PARAMETERS_TO_STORED_FCT, MYF(0), name.str);
     return NULL;
   }
 
@@ -5078,7 +5080,9 @@ Create_func_pi Create_func_pi::s_singleton;
 Item*
 Create_func_pi::create_builder(THD *thd)
 {
-  return new (thd->mem_root) Item_static_float_func(thd, "pi()", M_PI, 6, 8);
+  return new (thd->mem_root) Item_static_float_func(thd,
+                                                    "pi()"_Lex_ident_routine,
+                                                    M_PI, 6, 8);
 }
 
 
@@ -5722,10 +5726,10 @@ Item*
 Create_func_version::create_builder(THD *thd)
 {
   thd->lex->set_stmt_unsafe(LEX::BINLOG_STMT_UNSAFE_SYSTEM_FUNCTION);
-  static Lex_cstring name(STRING_WITH_LEN("version()"));
+  static Lex_ident_routine name= "version()"_Lex_ident_routine;
   return new (thd->mem_root) Item_static_string_func(thd, name,
                                                      Lex_cstring_strlen(server_version),
-                                                     system_charset_info,
+                                                     system_charset_info_for_i_s,
                                                      DERIVATION_SYSCONST);
 }
 
@@ -6103,7 +6107,8 @@ bool Native_functions_hash::init(size_t count)
   DBUG_ENTER("Native_functions_hash::init");
 
   if (my_hash_init(key_memory_native_functions, this,
-                   system_charset_info, (ulong) count, 0, 0, (my_hash_get_key)
+                   Lex_ident_routine::charset_info(),
+                   (ulong) count, 0, 0, (my_hash_get_key)
                    get_native_fct_hash_key, NULL, MYF(0)))
     DBUG_RETURN(true);
 

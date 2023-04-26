@@ -113,7 +113,7 @@ class sp_name : public Sql_alloc,
 public:
   bool       m_explicit_name;                   /**< Prepend the db name? */
 
-  sp_name(const LEX_CSTRING *db, const LEX_CSTRING *name,
+  sp_name(const Lex_ident_db &db, const LEX_CSTRING &name,
           bool use_explicit_name)
     : Database_qualified_name(db, name), m_explicit_name(use_explicit_name)
   {
@@ -765,7 +765,7 @@ public:
     return false;
   }
   bool fill_spvar_definition(THD *thd, Column_definition *def,
-                             LEX_CSTRING *name)
+                             const Lex_ident_column *name)
   {
     def->field_name= *name;
     return fill_spvar_definition(thd, def);

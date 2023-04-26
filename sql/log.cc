@@ -831,20 +831,15 @@ int check_if_log_table(const TABLE_LIST *table,
                        const char *error_msg)
 {
   int result= 0;
-  if (table->db.length == 5 &&
-      !my_strcasecmp(table_alias_charset, table->db.str, "mysql"))
+  if (table->db.streq(MYSQL_SCHEMA_NAME))
   {
-    const char *table_name= table->table_name.str;
-
-    if (table->table_name.length == 11 &&
-        !my_strcasecmp(table_alias_charset, table_name, "general_log"))
+    if (table->table_name.streq(GENERAL_LOG_NAME))
     {
       result= QUERY_LOG_GENERAL;
       goto end;
     }
 
-    if (table->table_name.length == 8 &&
-        !my_strcasecmp(table_alias_charset, table_name, "slow_log"))
+    if (table->table_name.streq(SLOW_LOG_NAME))
     {
       result= QUERY_LOG_SLOW;
       goto end;
@@ -7879,10 +7874,11 @@ static int binlog_online_alter_end_trans(THD *thd, bool all, bool commit)
   DBUG_RETURN(error);
 }
 
-SAVEPOINT** find_savepoint_in_list(THD *thd, LEX_CSTRING name,
+SAVEPOINT** find_savepoint_in_list(THD *thd,
+                                   const Lex_ident_savepoint name,
                                    SAVEPOINT ** const list);
 
-SAVEPOINT* savepoint_add(THD *thd, LEX_CSTRING name, SAVEPOINT **list,
+SAVEPOINT* savepoint_add(THD *thd, Lex_ident_savepoint name, SAVEPOINT **list,
                          int (*release_old)(THD*, SAVEPOINT*));
 
 int online_alter_savepoint_set(THD *thd, LEX_CSTRING name)
@@ -7901,7 +7897,8 @@ int online_alter_savepoint_set(THD *thd, LEX_CSTRING name)
     if (cache.hton->savepoint_set == NULL)
       continue;
 
-    SAVEPOINT *sv= savepoint_add(thd, name, &cache.sv_list, NULL);
+    SAVEPOINT *sv= savepoint_add(thd, Lex_ident_savepoint(name),
+                                 &cache.sv_list, NULL);
     if(unlikely(sv == NULL))
       DBUG_RETURN(1);
     my_off_t *pos= (my_off_t*)(sv+1);
@@ -7923,7 +7920,8 @@ int online_alter_savepoint_rollback(THD *thd, LEX_CSTRING name)
     if (cache.hton->savepoint_set == NULL)
       continue;
 
-    SAVEPOINT **sv= find_savepoint_in_list(thd, name, &cache.sv_list);
+    SAVEPOINT **sv= find_savepoint_in_list(thd, Lex_ident_savepoint(name),
+                                           &cache.sv_list);
     // sv is null if savepoint was set up before online table was modified
     my_off_t pos= *sv ? *(my_off_t*)(*sv+1) : 0;
 
